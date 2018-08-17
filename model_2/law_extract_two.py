@@ -180,8 +180,6 @@ def sentence_split_j(item):
 
     return sen
 
-
-
 def info_extract_j(sen):
     # result_list代表后果里有的关键词，比如责令等
     # 检查句子中有几个key词
@@ -211,10 +209,10 @@ def info_extract_j(sen):
             tem_dict['behavior'] = ''
             tem_dict['result'] = ''
             # 如果主语之前出现过，此处出现在了condition里，且此时subject为空
-            if (has_subject(tem_dict['condition'])) and tem_dict['subject'] == '':
+            if (has_subject(tem_dict['condition']) is True) and tem_dict['subject'] == '':
                 tem_dict['subject'] = tem_dict['condition']
                 tem_dict['condition'] = ''
-            elif tem_dict['subject'] != '':
+            elif tem_dict['subject'] != '' and has_subject(tem_dict['subject']) is False:
                 add_to_subject(tem_dict['subject'])
             # 使用has_result函数来判断
             # 如果在里面，就代表后面的句子是result，前面的过滤出主语

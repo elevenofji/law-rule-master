@@ -121,7 +121,7 @@ def has_subject(sen):
     return False
 
 def add_to_subject(s):
-    with open('../data_process/subject.txt', 'a') as f:
+    with open('../data_process/subject.txt', 'a', encoding='UTF-8') as f:
         f.write(s + '\n')
     return 0
 

@@ -105,12 +105,10 @@ def sentences_to_parts_one(contents):
 
 
 # 第二类
-def sentences_to_parts_two(lines):
+def sentences_to_parts_two(line):
     generated_final = []
     sub_temp = ''
-    lines = lines.strip().replace('；', '</p>').replace(' ', ''). \
-        replace('“', '').replace('”', '').replace('\u3000', '').replace('<p>', '').replace('\ufeff', '')
-    line = lines.split('</p>')
+
     for i, s in enumerate(line):
         if s == '':
             continue

@@ -265,12 +265,12 @@ def all_law_parse(sql):
             data_3.append([s_id, result])
         elif num == 4:
             data_4.append([s_id, result])
-
+'''
     full_result_1(data_1)
     full_result_2(data_2)
     full_result_3(data_3)
     full_result_4(data_4)
-
+'''
 
 def take_out_colon(num, item):
     num1 = ''
@@ -379,7 +379,9 @@ if __name__ == '__main__':
         size = 10
         step = 1000
         for i in range(size):
-            sql = 'select lit.id, law_id, item_id, sentence from law_item_split lit LEFT JOIN zllaw ON lit.law_id = zllaw.ID  WHERE zllaw.TYPENAME like '+r"'%交通%'"+' and lit.`index`>=(SELECT lit.`index` FROM law_item_split limit '+str(i*step)+", 1)" + "LIMIT "+str(step)
+            sql = 'select lit.id, law_id, item_id, sentence from law_item_split lit LEFT JOIN zllaw ON ' \
+                  'lit.law_id = zllaw.ID  WHERE zllaw.TYPENAME like ' + r"'%交通%'" \
+                  + ' limit ' + str(i * step) + ", " + str(step)
             all_law_parse(sql)
     except (SystemExit, KeyboardInterrupt):
         raise
