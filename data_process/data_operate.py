@@ -1,15 +1,24 @@
-import time
-import pymysql
-import re
+import sys
 import uuid
-from function_lib import rule_table
+sys.path.append(r'F:\law_git_cll')
 from model_2 import law_extract_two as lof
 from function_lib.functions import *
 from regex_select import sentences_to_parts
+import logging
+import time
 
 def write_to_file(res, path, flag=1):
-
     with open(path, 'w', encoding='UTF-8') as outfile:
+        for s in res:
+            if flag == 0:
+                outfile.write('\t'.join(map(str, s)).replace(r'\u3000', ' ').replace('\n','') + '\n')
+            else:
+                outfile.write(str(s).replace(r'\u3000', ' ') + '\n')
+        print('lines:', len(res))
+
+
+def write_to_file_append(res, path, flag=1):
+    with open(path, 'a+', encoding='UTF-8') as outfile:
         for s in res:
             if flag == 0:
                 outfile.write('\t'.join(map(str, s)).replace(r'\u3000', ' ').replace('\n','') + '\n')
@@ -36,6 +45,7 @@ def not_filter(sentences, reg):
             data.append(s)
     return data
 
+
 def build_condition(condition_id, sentence_id, condition):
     condition_sql = 'insert into lawcrf_condition values (%s,%s,%s)'
     condition_args = [condition_id, str(sentence_id), condition]
@@ -47,15 +57,18 @@ def build_subject(subject_id, sentence_id,  subject):
     subject_args = [subject_id, str(sentence_id), subject]
     write_data_to_mysql(subject_sql, [subject_args])
 
+
 def build_behavior(behavior_id, sentence_id, behavior, condition_id, subject_id, result_id, key_id=None):
     behavior_sql = 'insert into lawcrf_behavior values (%s,%s,%s,%s,%s,%s,%s)'
     behavior_args = [behavior_id, str(sentence_id), behavior, condition_id, subject_id, result_id,  key_id]
     write_data_to_mysql(behavior_sql, [behavior_args])
 
+
 def build_result(result_id, sentence_id, result):
     result_sql = 'insert into lawcrf_result values (%s,%s,%s)'
     result_args = [result_id, str(sentence_id), result]
     write_data_to_mysql(result_sql, [result_args])
+
 
 def build_key(key_id, sentence_id, key):
     key_sql = 'insert into lawcrf_key values (%s,%s,%s)'
@@ -66,63 +79,64 @@ def build_key(key_id, sentence_id, key):
 def full_result_1(data):
     # sql_1 = 'select law_item_id, full_result from lawcrflabel where template_num = 1'
     # data = get_data_from_mysql(sql_1)
-    print('data size:', len(data))
+    # print('data_1 size:', len(data))
     for i, t in enumerate(data[:]):
-        print(str(i) + '--' + str(t))
+        # print(str(i) + '--' + str(t))
         sentence_id = t[0]
         full_result = t[1]
         # full_result = full_result.replace("'", '"')
         # full_result_dict = json.loads(full_result, encoding='UTF-8')
-        full_result_dict = full_result
-        if not full_result_dict:
-            continue
-        condition = full_result_dict['condition']
-        subject = full_result_dict['subject']
-        behavior = full_result_dict['behavior']
-        result = full_result_dict['result']
-        # key = full_result_dict['key']
+        for res in full_result:
+            full_result_dict = res
+            if not full_result_dict:
+                continue
+            condition = full_result_dict['condition']
+            subject = full_result_dict['subject']
+            behavior = full_result_dict['behavior']
+            result = full_result_dict['result']
+            # key = full_result_dict['key']
 
-        condition_id = None
-        if len(condition) > 1:
-            condition_id = str(uuid.uuid1())
-            build_condition(condition_id, sentence_id, condition)
+            condition_id = None
+            if len(condition) > 1:
+                condition_id = str(uuid.uuid1())
+                build_condition(condition_id, sentence_id, condition)
 
-        result_id = None
-        if len(result) > 1:
-            result_id = str(uuid.uuid1())
-            build_result(result_id, sentence_id, result)
+            result_id = None
+            if len(result) > 1:
+                result_id = str(uuid.uuid1())
+                build_result(result_id, sentence_id, result)
 
-        subject_id = None
-        if isinstance(subject, str):
-            if len(subject) > 1:
-                subject_id = str(uuid.uuid1())
-                build_subject(subject_id, sentence_id, subject)
-            if behavior:
-                for be in behavior:
-                    behavior_id = str(uuid.uuid1())
-                    build_behavior(behavior_id, sentence_id, be, condition_id, subject_id, result_id,  None)
-        elif isinstance(subject, list):
-            for i, su in enumerate(subject):
-                if su != '':
+            subject_id = None
+            if isinstance(subject, str):
+                if len(subject) > 1:
                     subject_id = str(uuid.uuid1())
-                    build_subject(subject_id, sentence_id, su)
+                    build_subject(subject_id, sentence_id, subject)
                 if behavior:
-                    behavior_id = str(uuid.uuid1())
-                    build_behavior(behavior_id, sentence_id, behavior[i], condition_id, subject_id, result_id, None)
+                    for be in behavior:
+                        behavior_id = str(uuid.uuid1())
+                        build_behavior(behavior_id, sentence_id, be, condition_id, subject_id, result_id,  None)
+            elif isinstance(subject, list):
+                for i, su in enumerate(subject):
+                    if su != '':
+                        subject_id = str(uuid.uuid1())
+                        build_subject(subject_id, sentence_id, su)
+                    if behavior:
+                        behavior_id = str(uuid.uuid1())
+                        build_behavior(behavior_id, sentence_id, behavior[i], condition_id, subject_id, result_id, None)
 
 
 def full_result_2(data):
     # sql_2 = 'select law_item_id, full_result from lawcrflabel where template_num = 2'
     # data = get_data_from_mysql(sql_2)
-    print('data size:', len(data))
+    # print('data_2 size:', len(data))
     for i, t in enumerate(data[:]):
-        print(str(i) + '--' + str(t))
+        # print(str(i) + '--' + str(t))
         sentence_id = t[0]
         full_result = t[1]
         # full_result = full_result.replace("'", '"')
-        for re in full_result:
+        for res in full_result:
             # full_result_dict = json.loads(re, encoding='UTF-8')
-            full_result_dict = re
+            full_result_dict = res
             if not full_result_dict:
                 continue
             condition = full_result_dict['condition']
@@ -130,91 +144,115 @@ def full_result_2(data):
             behavior = full_result_dict['behavior']
             key = full_result_dict['key']
 
-            condition_id = str(uuid.uuid1())
-            build_condition(condition_id, sentence_id, condition)
+            condition_id = None
+            if condition:
+                condition_id = str(uuid.uuid1())
+                build_condition(condition_id, sentence_id, condition)
 
-            subject_id = str(uuid.uuid1())
-            build_subject(subject_id, sentence_id, subject)
+            subject_id = None
+            if subject:
+                subject_id = str(uuid.uuid1())
+                build_subject(subject_id, sentence_id, subject)
+
+            result_id = None
+            key_id = None
+            if key:
+                key_id = str(uuid.uuid1())
+                build_key(key_id, sentence_id, key)
+
+            if behavior:
+                behavior_id = str(uuid.uuid1())
+                build_behavior(behavior_id, sentence_id, behavior, condition_id, subject_id, result_id, key_id)
+
+
+def full_result_3(data):
+    # print('data_3 size:', len(data))
+    for i, t in enumerate(data[:]):
+        # print(str(i) + '--' + str(t))
+        sentence_id = t[0]
+        full_result = t[1]
+        for res in full_result:
+            full_result_dict = res
+            if not full_result_dict:
+                continue
+            condition = full_result_dict['condition']
+            subject = full_result_dict['subject']
+            behavior = full_result_dict['behavior']
+            key = full_result_dict['key']
+
+            condition_id = None
+            if condition:
+                condition_id = str(uuid.uuid1())
+                build_condition(condition_id, sentence_id, condition)
+            # print('condition:', condition_id, sentence_id, condition)
+
+            subject_id = None
+            if subject:
+                subject_id = str(uuid.uuid1())
+                build_subject(subject_id, sentence_id, subject)
+            # print('subject:', subject_id, sentence_id, subject)
 
             result_id = None
 
-            key_id = str(uuid.uuid1())
-            build_key(key_id, sentence_id, key)
+            key_id = None
+            if key:
+                key_id = str(uuid.uuid1())
+                build_key(key_id, sentence_id, key)
+            # print('key', key_id, sentence_id, key)
+
+            behavior_id = None
+            if behavior:
+                behavior_id = str(uuid.uuid1())
+                build_behavior(behavior_id, sentence_id, behavior, condition_id, subject_id, result_id, key_id)
+            # print('behavior', behavior_id, sentence_id, behavior, condition_id, subject_id, result_id, key_id)
+
+
+def full_result_4(data):
+    # print('data_4 size:', len(data))
+    for i, t in enumerate(data[:]):
+        # print(str(i) + '--' + str(t))
+        sentence_id = t[0]
+        full_result = t[1]
+        for res in full_result:
+            full_result_dict = res
+            if not full_result_dict:
+                continue
+            # condition = full_result_dict['condition']
+            # subject = full_result_dict['subject']
+            result = full_result_dict['result']
+            # key = full_result_dict['key']
+            behavior = full_result_dict['behavior']
+
+            condition_id = None
+            # build_condition(condition_id, sentence_id, condition)
+            # print('condition:', condition_id, sentence_id, condition)
+            #
+            subject_id = None
+            # build_subject(subject_id, sentence_id, subject)
+            # print('subject:', subject_id, sentence_id, subject)
+
+            key_id = None
+            # build_key(key_id, sentence_id, key)
+            # print('key', key_id, sentence_id, key)
+
+            result_id = str(uuid.uuid1())
+            build_result(result_id, sentence_id, result)
 
             behavior_id = str(uuid.uuid1())
-            build_behavior(behavior_id, sentence_id, behavior, condition_id, subject_id, result_id, key_id)
-
-
-def full_result_3(s):
-    pass
-
-
-def model_result_parse(data_path, n):
-    start = time.time()
-    lines = read_from_file(data_path)
-    sql = 'INSERT INTO lawcrflabel(law_event_id, law_item_id, law_title, full_result, template_num) VALUES(%s,%s,%s,%s,%s)'
-    params = []
-    for i, line in enumerate(lines[:]):
-        if line == '\n':
-            continue
-        if i % 3 == 0:
-            arr = [str(uuid.uuid1())]
-            arr.extend(line.split('\t')[:2])
-        elif i % 3 == 2:
-            arr.append(line.replace('\n', ''))
-            arr.append(n)
-            params.append(arr)
-            print('arr:', arr)
-    write_data_to_mysql(sql, params)
-    end = time.time()
-    print('cost time:%s s' % str(end - start))
-
-# 从数据库中读取杭州，浙江，国家道路交通法律，写入文件
-def read_four_law():
-    sql_hz = "select k.lawcheckid, k.lawcheckcolumnid, t.lawname, k.content from lawcheckcolumn k left join lawcheck t on k.lawcheckid = t.lawcheckid where k.lawcheckid = " \
-             "'81cb96a1-dd38-460f-971c-f4fb00ac259e' union all " \
-             "select lawid, c.id, z.TITLE, c.CONTENT from zllawcolumn c left join zllaw z on c.LAWID = z.id where LAWID in ('355250', '332819', '334395')"
-    four_law_data = get_data_from_mysql(sql_hz)
-    write_to_file(four_law_data, 'four_law.txt', 0)
-
-def four_law_split():
-    sql_hz = "select k.lawcheckid, k.lawcheckcolumnid, t.lawname, k.content from lawcheckcolumn k left join lawcheck t on k.lawcheckid = t.lawcheckid where k.lawcheckid = " \
-             "'81cb96a1-dd38-460f-971c-f4fb00ac259e' union all " \
-             "select lawid, c.id, z.TITLE, c.CONTENT from zllawcolumn c left join zllaw z on c.LAWID = z.id where LAWID in ('355250', '332819', '334395')"
-    four_law_data = get_data_from_mysql(sql_hz)
-    for line in four_law_data[:]:
-        print(line)
-        item_id, title, content = line[0], line[1], line[2]
-
-
-def four_law_parse_from_file():
-    four_law_data = read_from_file('four_law.txt')
-    data_1 = []
-    data_2 = []
-    for line in four_law_data[:5]:
-        contents = line.split('\t')
-        law_id, item_id, title, content = contents[0], contents[1], contents[2], contents[3]
-        result, num = rule_table.extract_by_regex(content)
-        if not result:
-            continue
-        if num == 1:
-            data_1.append([item_id, result])
-        else:
-            data_2.append([item_id, result])
-
-    full_result_1(data_1)
-    full_result_2(data_2)
+            build_behavior(behavior_id, sentence_id, behavior, condition_id,subject_id, result_id, key_id)
 
 
 # 所有法条，按照三种句模，执行成分标注
 def all_law_parse(sql):
     # sql = 'select id, law_id, item_id, sentence from law_item_split'
-    four_law_data = get_data_from_mysql(sql)
+    all_law_data = get_data_from_mysql(sql)
+    # write_to_file_append(all_law_data, 'all_law_data.out')
     data_1 = []
     data_2 = []
     data_3 = []
+    data_4 = []
 
-    for line in four_law_data[:]:
+    for line in all_law_data[:]:
         s_id, law_id, item_id, sentence = line[0], line[1], line[2], line[3]
         result, num = sentences_to_parts(sentence)
         if not result:
@@ -225,12 +263,13 @@ def all_law_parse(sql):
             data_2.append([s_id, result])
         elif num == 3:
             data_3.append([s_id, result])
+        elif num == 4:
+            data_4.append([s_id, result])
 
-    print('data_1', data_1)
-    print('data_2', data_2)
     full_result_1(data_1)
     full_result_2(data_2)
     full_result_3(data_3)
+    full_result_4(data_4)
 
 
 def take_out_colon(num, item):
@@ -242,6 +281,7 @@ def take_out_colon(num, item):
         num1 = num + sub_matcher[0]
         item1 = item.replace(num, '')
     return num1, item1
+
 
 def take_out_num(num, item):
     num1 = ''
@@ -283,7 +323,7 @@ if __name__ == '__main__':
     # traffic_res = get_data_from_mysql(traffic_sql)
     # write_to_file(traffic_res, 'traffic_law.txt', 0)
 
-    # 1134 
+    # 1134
     # start = time.time()
     # reg = '.*有下列情形之一的.*'
     # traffic_data = read_from_file('traffic_law.txt')
@@ -292,7 +332,7 @@ if __name__ == '__main__':
     # end = time.time()
     # print('cost time:%s s' % str(end - start))
 
-    # 658 
+    # 658
     # start = time.time()
     # reg = '.*有下列情形之一的.*(处罚|罚款|警告|责令|处分|追究).*'
     # traffic_data = read_from_file('traffic_law.txt')
@@ -321,13 +361,30 @@ if __name__ == '__main__':
     # four_law_parse()
     # four_law_split()
     # four_law_parse_from_db()
+    import os
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)  # 设置log等级
+    rq = time.strftime('%Y%m%d%H%M', time.localtime(time.time()))
+    log_path = os.path.dirname(os.getcwd()) + '/Logs/'
+    log_name = log_path + rq + '.log'
+    logfile = log_name
+    fh = logging.FileHandler(logfile, mode='a')
+    fh.setLevel(logging.ERROR)
 
-    size = 100000
-    step = 10
-    for i in range(size):
-        sql = 'select id, law_id, item_id, sentence from law_item_split limit ' + i*step + ', ' + step
-        # all_law_parse(sql)
-
+    # 定义handler的输出格式
+    formatter = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    try:
+        size = 10
+        step = 1000
+        for i in range(size):
+            sql = 'select lit.id, law_id, item_id, sentence from law_item_split lit LEFT JOIN zllaw ON lit.law_id = zllaw.ID  WHERE zllaw.TYPENAME like '+r"'%交通%'"+' and lit.`index`>=(SELECT lit.`index` FROM law_item_split limit '+str(i*step)+", 1)" + "LIMIT "+str(step)
+            all_law_parse(sql)
+    except (SystemExit, KeyboardInterrupt):
+        raise
+    except Exception:
+        logger.error('程序崩啦！！！', exc_info=True)
 
 
 
