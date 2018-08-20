@@ -4,13 +4,13 @@ import re
 
 keys = ['当', '应当', '方可', '不得', '禁止', '严禁', '可以']
 
-'''
+
 def item_info_parse(text):
     sentences = sentence_split(text)
     # print('sentences:', sentences)
     templates = info_extract(sentences)
     return templates
-'''
+
 
 def info_extract(sentences):
     templates = []
