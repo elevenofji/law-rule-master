@@ -143,7 +143,7 @@ def sentence_split_j(item):
     sen = []
     key_id = 0
     # 主语此时默认应该在key词的前面
-    iskey = check_key(item)
+    iskey = check_key_one(item)
     if iskey:
         key_id = iskey[-1]
 
@@ -180,10 +180,18 @@ def sentence_split_j(item):
 
     return sen
 
+def check_key_two(sen):
+    tem = []
+    for i, word in enumerate(sen):
+        if word in keys:
+            tem.append(i)
+    return tem
+
 def info_extract_j(sen):
     # result_list代表后果里有的关键词，比如责令等
     # 检查句子中有几个key词
-    iskey = check_key(sen)
+
+    iskey = check_key_two(sen)
     # 此类分句情况下实际上sen里只有一个list
     tem_dict = dict()
     if iskey:
@@ -233,11 +241,11 @@ def info_extract_j(sen):
 
 
 # 检查句子中有没有key词，返回由所有key词组成的list
-def check_key(sen):
+def check_key_one(sen):
     tem = []
-    for i, word in enumerate(sen):
-        if word in keys:
-            tem.append(i)
+    for word in keys:
+        if word in sen:
+            tem.append(sen.find(word))
     return tem
 
 
@@ -245,7 +253,7 @@ def check_key(sen):
 # .*(应当|不得|禁止|严禁|可以|方可).*
 if __name__ == '__main__':
     # print(subject_condition_filter('<s>部队</s>执行任务、战备训练需要使用航道的，<s>负责航道管理的部门</s>应当给'))
-    sen = '<p>进行航道工程建设应当维护河势稳定，符合防洪要求，不得危及依法建设的其他工程或者设施的安全。</p>'
+    sen = '<p>高速公路、大中城市中心城区内的道路，禁止拖拉机通行。</p>'
     generated_final = []
     sub_temp = ''
     sen = sen.strip().replace('；', '</p>').replace(' ', ''). \
