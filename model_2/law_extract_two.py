@@ -240,7 +240,7 @@ def info_extract_j(sen):
     return tem_dict
 
 
-# 检查句子中有没有key词，返回由所有key词组成的list
+# 检查句子中有没有key词，返回由所有key词组成的
 def check_key_one(sen):
     tem = []
     for word in keys:
